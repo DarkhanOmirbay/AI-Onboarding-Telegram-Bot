@@ -44,7 +44,7 @@ class QdrantHelper:
                 logger.error(f"OpenAI embedding failed too: {openai_error}")
                 raise RuntimeError("Both embedding providers failed")
 
-    async def retrieve_context(self, user_question: str) -> str:
+    async def retrieve_context(self, user_question: str) -> tuple[str, list[int]]:
         query = await self.embedder(query_str=user_question)
         search_result = await self.qdrant_client.query_points(
             collection_name=settings.QDRANT_COLLECTION_NAME,
@@ -59,7 +59,8 @@ class QdrantHelper:
                 if point.payload is not None
             ]
         )
-        return relevant_context
+        point_ids: list[int] = [point.id for point in search_result.points]
+        return relevant_context, point_ids
 
 
 qdrant_helper = QdrantHelper()
