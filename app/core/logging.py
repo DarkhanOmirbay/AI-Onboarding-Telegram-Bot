@@ -1,7 +1,7 @@
 import logging
-from logging import StreamHandler, FileHandler
-from app.core.config import settings
+from logging import FileHandler, StreamHandler
 
+from app.core.config import settings
 
 formatter = logging.Formatter(
     fmt="%(asctime)s %(name)s:%(levelname)s:%(message)s", datefmt="%F %A %T"

@@ -1,20 +1,16 @@
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
-
+from aiohttp import ClientSession
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.db_helper import db_helper
-from app.models.models import User, Chat
-
-from app.crud.user import read_user, create_user
-from app.crud.chat import read_chat, create_chat
-
 from app.core.config import settings
-from aiohttp import ClientSession
-
+from app.crud.chat import create_chat, read_chat
+from app.crud.user import create_user, read_user
+from app.models.models import Chat, User
 
 onboarding_router = Router()
+
 
 async def is_user_in_channel(user_id: int) -> bool:
     url = f"https://api.telegram.org/bot{settings.BOT_TOKEN}/getChatMember"
@@ -34,13 +30,12 @@ async def is_user_in_channel(user_id: int) -> bool:
 
 @onboarding_router.message(Command("start"))
 async def command_start_handler(message: Message, session: AsyncSession) -> None:
-    
+
     user_id = message.from_user.id
     is_member = await is_user_in_channel(user_id)
     if not is_member:
         await message.answer(
-            "⚠️ Доступ запрещён.\n"
-            f"Пожалуйста, подпишись на канал , чтобы использовать бота."
+            "⚠️ Доступ запрещён.\n" "Пожалуйста, подпишись на канал , чтобы использовать бота."
         )
         return
     user: User = await read_user(session=session, user_id=user_id)

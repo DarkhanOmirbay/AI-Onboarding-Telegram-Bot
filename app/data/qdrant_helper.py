@@ -1,8 +1,6 @@
 import httpx
-
-from qdrant_client import AsyncQdrantClient
-
 from openai import AsyncOpenAI
+from qdrant_client import AsyncQdrantClient
 
 from app.core.config import settings
 from app.core.logging import logger
@@ -24,9 +22,7 @@ class QdrantHelper:
                     json={"model": "text-1024", "input": query_str},
                 )
                 if response.status_code != 200:
-                    raise ValueError(
-                        "Jina3 embedding API returned {response.status_code}"
-                    )
+                    raise ValueError("Jina3 embedding API returned {response.status_code}")
             response_dict = response.json()
             data = response_dict["data"]
             embedding = data[0]["embedding"]

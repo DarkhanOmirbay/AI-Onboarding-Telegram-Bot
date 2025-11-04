@@ -1,20 +1,16 @@
-from aiogram import Router, F
+from aiogram import F, Router
 from aiogram.filters import Command
-from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
-
-from app.core.state import QAStates
-from app.data.qdrant_helper import qdrant_helper
-from app.core.config import settings
-from app.models.models import Message as MessageModel
-from app.models.models import Response
-from app.crud.chat import add_msg_and_rspnse
-from app.keyboards.keyboards import stop
-
+from aiogram.types import CallbackQuery, Message
 from openai import AsyncOpenAI
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
+from app.core.state import QAStates
+from app.crud.chat import add_msg_and_rspnse
+from app.data.qdrant_helper import qdrant_helper
+from app.keyboards.keyboards import stop
+from app.models.models import Message as MessageModel, Response
 
 qa_router = Router()
 db = {}
@@ -35,17 +31,12 @@ async def process_question(message: Message, state: FSMContext, session: AsyncSe
     user_questions = db[user_id]["questions"]
     user_answers = db[user_id]["answers"]
     user_questions.append(user_question)
-    context, point_ids = await qdrant_helper.retrieve_context(
-        user_question=user_question
-    )
+    context, point_ids = await qdrant_helper.retrieve_context(user_question=user_question)
     print(context)
 
     # Собираем историю диалога в виде текста
     conversation_history = "\n".join(
-        [
-            f"Q{i+1}: {q}\nA{i+1}: {a}"
-            for i, (q, a) in enumerate(zip(user_questions, user_answers))
-        ]
+        [f"Q{i+1}: {q}\nA{i+1}: {a}" for i, (q, a) in enumerate(zip(user_questions, user_answers))]
     )
 
     # Формируем финальный prompt
@@ -82,9 +73,7 @@ async def process_question(message: Message, state: FSMContext, session: AsyncSe
         user_id=message.from_user.id,
         text=user_question,
     )
-    rspnse: Response = Response(
-        message_id=message.message_id, answer=answer, retrieved=point_ids
-    )
+    rspnse: Response = Response(message_id=message.message_id, answer=answer, retrieved=point_ids)
     await add_msg_and_rspnse(session=session, msg=msg, rspnse=rspnse)
     await message.answer(answer, reply_markup=stop)
 

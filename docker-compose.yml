@@ -33,7 +33,7 @@ services:
     ports:
       - 8282:8080
     networks:
-      - bot_network 
+      - bot_network
 
 
 volumes:

@@ -1,23 +1,17 @@
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.filters.callback_data import CallbackData
-
-from aiogram.types import Message, CallbackQuery
-
-from app.crud.quiz import get_quiz, create_quiz, update_day
-
+from aiogram.types import CallbackQuery, Message
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.models import Quiz
-
+from app.crud.quiz import create_quiz, get_quiz, update_day
 from app.data.questions import (
     questions_quiz_one,
-    questions_quiz_two,
     questions_quiz_three,
+    questions_quiz_two,
 )
-
-from aiogram.utils.keyboard import InlineKeyboardBuilder
-
+from app.models.models import Quiz
 
 quiz_router = Router()
 user_sessions = {}
@@ -29,18 +23,14 @@ class AnswerCallback(CallbackData, prefix="ans"):  # ans:q_index:opt_index
     quiz_day: int
 
 
-def make_keyboard(
-    questions: list, q_index: int, quiz_day: int
-) -> InlineKeyboardBuilder:
+def make_keyboard(questions: list, q_index: int, quiz_day: int) -> InlineKeyboardBuilder:
     q = questions[q_index]
     kb = InlineKeyboardBuilder()
     for i, opt in enumerate(q["options"]):
         kb.button(
             text=f"{chr(65+i)}",
             # text=f"{chr(65+i)}) {opt}"
-            callback_data=AnswerCallback(
-                q_index=q_index, opt_index=i, quiz_day=quiz_day
-            ).pack(),
+            callback_data=AnswerCallback(q_index=q_index, opt_index=i, quiz_day=quiz_day).pack(),
         )
     kb.adjust(2)
     return kb.as_markup()
