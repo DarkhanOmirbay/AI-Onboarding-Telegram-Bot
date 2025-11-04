@@ -13,3 +13,4 @@ app/data/dataset
 app/data/pdf_contents.json
 app/data/save.ipynb
 plan.txt
+logs.log
