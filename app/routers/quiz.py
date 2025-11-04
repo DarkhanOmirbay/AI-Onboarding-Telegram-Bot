@@ -1,4 +1,4 @@
-from aiogram import Router
+from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import CallbackQuery, Message
@@ -6,12 +6,14 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.quiz import create_quiz, get_quiz, update_day
+from app.crud.user import update_user_department
 from app.data.questions import (
     questions_quiz_one,
     questions_quiz_three,
     questions_quiz_two,
 )
-from app.models.models import Quiz
+from app.keyboards.keyboards import department_keyboard
+from app.models.models import Quiz, User
 
 quiz_router = Router()
 user_sessions = {}
@@ -173,12 +175,25 @@ async def handle_answer(
                     f"Вы успешно прошли все тесты программы! 🏆\n"
                     f"Ваш результат за последний день: <b>{score}/{total}</b>."
                 )
+            elif current_day == 1:
+                result_text = (
+                    f"\n\n🚀 Отлично! Вы завершили 1-й день, набрав <b>{score}</b> из <b>{total}</b>.\n"
+                    f"Теперь выберите ваш отдел, чтобы открыть материалы второго дня 👇"
+                )
+                await callback.message.answer(
+                    result_text, parse_mode="HTML", reply_markup=department_keyboard
+                )
+                return
             else:
                 result_text = (
                     f"\n\n🚀 <b>Отлично!</b>\n"
                     f"Вы прошли тест {current_day}-го дня, набрав <b>{score}</b> из <b>{total}</b> баллов. 🎯\n"
                     f"Теперь можете перейти к тесту {new_day}-го дня, используя команду <b>/test</b>."
                 )
+                # TODO вы в каком отделе работаете? dev | prod | cuscare | finance | hr | gr | sales | marketing
+                # TODO crud for set user's department + add attr for entity user in db
+                # TODO write msg like open mini app and leanr material for second day about employee's department and pass test for second day using /test
+                # TODO in mini app's js create checker for users's department , send query to backend for user's department and dynamiclly show knowledge
         else:
             result_text = (
                 f"\n\n🏁 <b>Тест завершён!</b>\n\n"
@@ -189,3 +204,23 @@ async def handle_answer(
             )
         await callback.message.edit_text(result_text)
         user_sessions.pop(user_id, None)
+
+
+@quiz_router.callback_query(F.data.startswith("dep_"))
+async def handle_department(callback: CallbackQuery, session: AsyncSession):
+    department = callback.data.split("_")[1]
+
+    user_id = callback.from_user.id
+    user: User = await update_user_department(
+        session=session, user_id=user_id, department=department
+    )
+
+    if user:
+        await callback.message.answer(
+            f"✅ Ваш отдел: <b>{department}</b>\n"
+            f"Теперь откройте мини-приложение и изучите материалы по вашему направлению 📘.\n"
+            f"Когда будете готовы — используйте /test для второго дня.",
+            parse_mode="HTML",
+        )
+    else:
+        await callback.message.answer("⚠️ Пользователь не найден. Попробуйте снова.")
