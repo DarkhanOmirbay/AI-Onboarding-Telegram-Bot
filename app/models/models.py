@@ -31,6 +31,7 @@ class User(Base):
         default=lambda: datetime.now(timezone.utc),
         server_default=func.now(),
     )
+    department: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     chats: Mapped[list["Chat"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     messages: Mapped[list["Message"]] = relationship(
