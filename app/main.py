@@ -5,7 +5,7 @@ from app.routers.bot_router import router
 from app.core.config import settings
 from app.models.db_helper import db_helper
 from app.middlewares.db import DataBaseSession
-from app.middlewares.check_membership import CheckMembershipMiddleware
+
 
 
 dp = Dispatcher()
