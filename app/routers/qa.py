@@ -36,7 +36,10 @@ async def process_question(message: Message, state: FSMContext, session: AsyncSe
 
     # Собираем историю диалога в виде текста
     conversation_history = "\n".join(
-        [f"Q{i+1}: {q}\nA{i+1}: {a}" for i, (q, a) in enumerate(zip(user_questions, user_answers))]
+        [
+            f"Q{i+1}: {q}\nA{i+1}: {a}"
+            for i, (q, a) in enumerate(zip(user_questions, user_answers, strict=False))
+        ]
     )
 
     # Формируем финальный prompt

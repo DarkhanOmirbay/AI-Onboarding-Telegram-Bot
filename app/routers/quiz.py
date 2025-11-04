@@ -26,7 +26,7 @@ class AnswerCallback(CallbackData, prefix="ans"):  # ans:q_index:opt_index
 def make_keyboard(questions: list, q_index: int, quiz_day: int) -> InlineKeyboardBuilder:
     q = questions[q_index]
     kb = InlineKeyboardBuilder()
-    for i, opt in enumerate(q["options"]):
+    for i, _opt in enumerate(q["options"]):
         kb.button(
             text=f"{chr(65+i)}",
             # text=f"{chr(65+i)}) {opt}"

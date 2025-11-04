@@ -38,7 +38,7 @@ class QdrantHelper:
                 return embedding
             except Exception as openai_error:
                 logger.error(f"OpenAI embedding failed too: {openai_error}")
-                raise RuntimeError("Both embedding providers failed")
+                raise RuntimeError("Both embedding providers failed") from openai_error
 
     async def retrieve_context(self, user_question: str) -> tuple[str, list[int]]:
         query = await self.embedder(query_str=user_question)
