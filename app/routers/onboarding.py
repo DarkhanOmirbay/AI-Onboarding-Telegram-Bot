@@ -1,10 +1,4 @@
 from aiogram import Router
-from aiogram.types import Message
-from aiogram.filters import Command
-
-onboarding_router = Router()
-
-from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
@@ -16,13 +10,39 @@ from app.models.models import User, Chat
 from app.crud.user import read_user, create_user
 from app.crud.chat import read_chat, create_chat
 
+from app.core.config import settings
+from aiohttp import ClientSession
+
 
 onboarding_router = Router()
+
+async def is_user_in_channel(user_id: int) -> bool:
+    url = f"https://api.telegram.org/bot{settings.BOT_TOKEN}/getChatMember"
+    params = {"chat_id": settings.CHANNEL_ID, "user_id": user_id}
+
+    async with ClientSession() as session:
+        async with session.get(url, params=params) as resp:
+            data = await resp.json()
+
+    if not data.get("ok"):
+        print("Ошибка при проверке доступа:", data)
+        return False
+
+    status = data["result"]["status"]
+    return status in ("member", "administrator", "creator")
 
 
 @onboarding_router.message(Command("start"))
 async def command_start_handler(message: Message, session: AsyncSession) -> None:
+    
     user_id = message.from_user.id
+    is_member = await is_user_in_channel(user_id)
+    if not is_member:
+        await message.answer(
+            "⚠️ Доступ запрещён.\n"
+            f"Пожалуйста, подпишись на канал , чтобы использовать бота."
+        )
+        return
     user: User = await read_user(session=session, user_id=user_id)
     if user is None:
         user = User(
@@ -47,7 +67,10 @@ async def command_start_handler(message: Message, session: AsyncSession) -> None
         )
         await create_chat(session=session, chat=chat)
         print(f"chat created for user {user_id} chat {chat.id}")
-    await message.answer(f"{user.username} and chat_id {chat.id}")
+    # await message.answer(f"{user.username} and chat_id {chat.id}")
+    await message.answer(
+        "Привет! Я бот для проведения тестов по знанию компании TrustMe.\nЧтобы начать тест, используй команду /test. Удачи!,\n/qa - вопросы и ответы,\n/me - информация о вас",
+    )
 
 
 @onboarding_router.message(Command("me"))

@@ -10,7 +10,7 @@ from sqlalchemy import (
     Integer,
 )
 from sqlalchemy.orm import relationship, Mapped, mapped_column
-from .db_helper import Base
+from app.models.db_helper import Base
 from datetime import datetime, timezone
 
 
@@ -101,3 +101,13 @@ class Response(Base):
     )
 
     message: Mapped["Message"] = relationship(back_populates="response")
+
+
+class Quiz(Base):
+    __tablename__ = "quiz"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="CASCADE")
+    )
+    day: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
